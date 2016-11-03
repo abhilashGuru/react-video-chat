@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import WebcamViewerLayout from './WebcamViewerLayout';
 
-export default class WebcamViewerView extends Component {
+export default class WebcamViewer extends Component {
   render() {
     let {streamUrl} = this.props;
     return (
@@ -10,6 +10,6 @@ export default class WebcamViewerView extends Component {
   }
 }
 
-WebcamViewerView.defaultsProps = {
+WebcamViewer.defaultsProps = {
   streamUrl: null
 }

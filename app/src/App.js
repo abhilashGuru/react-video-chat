@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Router, Route, hashHistory } from 'react-router';
 import HomeView from './features/home/components/HomeView';
 import About from './features/pages/components/About/About';
-import Room from './features/room/components/RoomView';
+import Room from './features/room/components/Room';
 class App extends Component {
   render() {
     return (

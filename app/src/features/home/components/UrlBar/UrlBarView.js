@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import UrlBarLayout from './UrlBarLayout'
-import generateRandomWord from '../../../../helpers/generateRandomWord';
+import { generateRandomWord } from '../../../../helpers/random';
 
 export default class UrlBarView extends Component {
 

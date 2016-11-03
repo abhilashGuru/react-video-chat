@@ -6,10 +6,11 @@ import room from '../features/room/duck';
 const store = createStore(
   room,
   {
-    room: {
-      roomName: '',
-      localStreamUrl: null
-    }
+    availableRooms: [],
+    room: null,
+    user: null,
+    isHost: null,
+    messages: []
   },
   applyMiddleware(
     thunk,
