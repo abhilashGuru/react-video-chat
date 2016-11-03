@@ -3,7 +3,8 @@ import WebcamViewerLayout from './WebcamViewerLayout';
 
 export default class WebcamViewer extends Component {
   render() {
-    let {streamUrl} = this.props;
+    let {stream} = this.props;
+    let streamUrl = URL.createObjectURL(stream);
     return (
       <WebcamViewerLayout src={streamUrl}/>
     )

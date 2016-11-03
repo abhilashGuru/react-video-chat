@@ -1,21 +1,19 @@
 import { combineReducers } from 'redux';
 import { createStructuredSelector } from 'reselect';
 import { generateId } from '../../helpers/random';
-import { chatService } from ''
+import getChatService from '../../services/chatService';
+
+let chatService = getChatService();
 
 // Actions
-const ADD_ROOM = '/ROOM/ADD_ROOM';
 const SET_ROOM = '/ROOM/SET_ROOM';
 const UPDATE_ROOM = '/ROOM/UPDATE_ROOM';
-const SET_LOCAL_USER = '/ROOM/SET_LOCAL_USER'
-const ADD_JOINER = '/ROOM/ADD_JOINER';
-const SET_ACTIVE_ROOM_BY_NAME = '/ROOM/SET_ACTIVE_ROOM_BY_NAME';
-const SET_ROOM_LIST_VISIBILITY = '/ROOM/SET_ROOM_LIST_VISIBILITY';
-const REMOVE_ROOM = '/ROOM/REMOVE_ROOM';
-const SET_ROOM_STATUS = '/ROOM/SET_ROOM_STATUS';
+const ADD_USER = '/ROOM/ADD_USER';
+const UPDATE_USER = '/ROOM/UPDATE_USER';
 
 export const ROOM_STATUS = {
-  ConnectToServer: 0,
+  Initialize: 0,
+  ConnectToServer: 1,
   AccessWebcamAndMicrophone: 2,
   Ready: 3
 };
@@ -37,59 +35,81 @@ export function updateRoom(updateData) {
   return {
     type: UPDATE_ROOM,
     updateData
-  }
+  };
+}
+
+export function addUser(user) {
+  return {
+    type: ADD_USER,
+    user
+  };
+}
+
+export function updateUser(updateData) {
+  return {
+    type: UPDATE_USER,
+    updateData
+  };
 }
 
 export function joinRoom(name) {
   return (dispatch, getState) => {
+
     let room = createEmptyRoom({
       name: name,
-      isHost: false
+      isHost: false,
+      status: ROOM_STATUS.Initialize
     });
 
     dispatch(setRoom(room));
 
     chatService
-      .joinRoom(name)
-      .on('connected', () => {
-        let isHost = true;
-        if (!created) {
-          isHost = false;
-        }
+      .on('ready', () => {
+        chatService.joinRoom(name);
+      })
+      .on('connected', (data) => {
+        let {isHost} = data;
         let updateData = {
           isHost: isHost,
           status: ROOM_STATUS.AccessWebcamAndMicrophone
         }
+
+        dispatch(updateRoom(updateData));
+
+        chatService.getLocalStream().then(stream => {
+          let user = createUser({
+            isHost: isHost,
+            stream: stream,
+            status: USER_STATUS.Ready,
+            peerId: data.peerId
+          });
+
+          dispatch(addUser(user));
+        });
       })
-      .on('ready', () => {
-        dispatch(updateRoom(room))
-      });
+      .on('newJoiner', userData => {
+        let user = createUser({
+          peerId: userData.peerId,
+          status: USER_STATUS.Joining,
+          isHost: false
+        });
+        dispatch(addUser(user));
+      })
+      .on('newJoinerReady', stream => {
+        dispatch(updateUser({
+          stream: stream
+        }));
+      })
+
+    chatService.init();
+
+
   }
 }
 
-export function setActiveRoomByName(name) {
-  return {
-    type: SET_ACTIVE_ROOM_BY_NAME,
-    name
-  };
-}
-
-export function removeRoom(id) {
-  return {
-    type: REMOVE_ROOM,
-    id
-  };
-}
-
-export function setRoomListVisibility(value) {
-  return {
-    type: SET_ROOM_LIST_VISIBILITY,
-    value
-  };
-}
 
 function room(state = {}, action) {
-  switch (action) {
+  switch (action.type) {
     case SET_ROOM:
       return action.room;
     case UPDATE_ROOM:
@@ -99,38 +119,23 @@ function room(state = {}, action) {
   }
 }
 
-
-function rooms(state = [], action) {
+function users(state = [], action) {
   switch (action.type) {
-    case ADD_ROOM:
-      return [...state, action.room];
-    case REMOVE_ROOM:
-      return state.filter(room => room.id === action.id);
+    case ADD_USER:
+      return [...state, action.user];
+    case UPDATE_USER:
+      return state.map(user => {
+        return Object.assign({}, user, action.updateData);
+      });
     default:
       return state;
   }
 }
 
-function activeRoom(state = null, action) {
-  switch (action.type) {
-    case SET_ACTIVE_ROOM_BY_NAME:
-      state.name;
-    default:
-      return state;
-  }
-}
-
-function roomListVisibility(state = true, action) {
-  switch (action.type) {
-    case SET_ROOM_LIST_VISIBILITY:
-      return action.value;
-    default:
-      return state;
-  }
-}
 
 export default combineReducers({
-  room
+  room,
+  users
 });
 
 function createEmptyRoom(options) {
@@ -138,9 +143,18 @@ function createEmptyRoom(options) {
   let room = {
     id,
     name: options.name,
-    status: ROOM_STATUS.ConnectToServer,
-    users: [],
+    status: ROOM_STATUS.Initialize,
     isHost: options.isHost
   };
   return room;
+}
+
+function createUser(options) {
+  return {
+    id: generateId(),
+    stream: options.stream,
+    isHost: options.isHost,
+    status: options.status,
+    peerId: options.peerId
+  };
 }

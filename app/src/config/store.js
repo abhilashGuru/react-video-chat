@@ -6,11 +6,8 @@ import room from '../features/room/duck';
 const store = createStore(
   room,
   {
-    availableRooms: [],
     room: null,
-    user: null,
-    isHost: null,
-    messages: []
+    users: []
   },
   applyMiddleware(
     thunk,

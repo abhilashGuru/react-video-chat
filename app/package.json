@@ -4,6 +4,7 @@
   "private": true,
   "devDependencies": {},
   "dependencies": {
+    "dotenv": "^2.0.0",
     "es6-promise": "^4.0.5",
     "peerjs": "^0.3.14",
     "react": "^15.3.2",

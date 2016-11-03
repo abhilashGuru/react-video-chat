@@ -10,7 +10,7 @@ class RoomList extends Component {
       <RoomListLayout
         rooms={rooms}
         activeRoom={activeRoom}
-        roomListVisibility={roomListVisibility}>
+        isShowing={roomListVisibility}>
       </RoomListLayout>
     )
   }
